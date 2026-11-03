@@ -110,7 +110,7 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 
 .levels {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 26px;
 }
@@ -386,7 +386,7 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 /* ---------- small screens ---------- */
 
 @media (max-width: 560px) {
-  .levels { gap: 8px; }
+  .levels { gap: 8px; grid-template-columns: repeat(2, 1fr); }
   .level { padding: 10px 4px; }
   .level-emoji { font-size: 26px; }
   .level-name { font-size: 17px; }

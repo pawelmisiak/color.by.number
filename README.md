@@ -7,13 +7,14 @@ It's plain HTML, CSS and JavaScript with no build step, so GitHub Pages can serv
 ## Features
 
 - **10 funny animals:** Silly Cat, Muddy Pig, Goofy Frog, Winky Owl, Party Penguin, Cool Lion, Wiggly Octopus, Floppy Bunny, Moo Cow, Hungry Panda.
-- **3 difficulty levels:** each drawing is vector shapes turned into a grid, so one drawing works at every size.
+- **4 difficulty levels:** each drawing is vector shapes turned into a grid, so one drawing works at every size.
   - 🐣 **Easy:** 16 × 16, starts with *magic fill* (one tap paints a whole area).
   - 🐥 **Medium:** 24 × 24, starts with the brush.
   - 🦅 **Hard:** 32 × 32, starts with the brush.
+  - 🚀 **Super Hard:** 48 × 48, starts with the brush. Zoom in to see the numbers.
 - **Tools:** brush (tap or drag), 🪣 magic fill, ✋ move, zoom, and 💡 hint (zooms to a square that still needs the selected color).
 - **Kid-friendly help:** gray outlines like a coloring book, the squares for the current color are highlighted, a tap on the wrong square wiggles the right color, and the next color is picked automatically when one is finished.
-- **Rewards:** confetti, a little tune, the animal "talks" (speech synthesis), and a star for each level. That's 30 stars to collect.
+- **Rewards:** confetti, a little tune, the animal "talks" (speech synthesis), and a star for each level. That's 40 stars to collect.
 - **Replay** a time-lapse of how you colored the picture, and **save** it as a PNG.
 - **Progress is saved** in the browser (localStorage), on each device separately.
 - Works on phones, tablets and computers: pinch to zoom, two-finger pan, mouse wheel zoom.
