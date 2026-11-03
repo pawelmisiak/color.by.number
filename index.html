@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Color Critters</title>
+  <meta name="description" content="Color-by-number game with funny animals for kids.">
+  <meta name="theme-color" content="#ffb84d">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main id="home" class="screen home">
+    <header class="home-top">
+      <h1 class="logo" aria-label="Color Critters">
+        <span>C</span><span>o</span><span>l</span><span>o</span><span>r</span>
+        <span class="sp"></span>
+        <span>C</span><span>r</span><span>i</span><span>t</span><span>t</span><span>e</span><span>r</span><span>s</span>
+      </h1>
+      <div class="home-actions">
+        <span class="star-total" title="Stars collected">★ <b id="starTotal">0</b>/<span id="starMax">30</span></span>
+        <button class="icon-btn sound-btn" type="button">🔊</button>
+      </div>
+    </header>
+    <p class="tagline">Pick a funny animal and paint it by numbers!</p>
+
+    <div class="levels" id="levels" role="radiogroup" aria-label="Difficulty"></div>
+
+    <div class="gallery-head">
+      <h2>Animals</h2>
+      <button class="pill-btn" id="surprise" type="button">🎲 Surprise me!</button>
+    </div>
+    <div class="gallery" id="gallery"></div>
+
+    <p class="foot">Finish a picture on each level to collect all three stars ★★★</p>
+  </main>
+
+  <section id="game" class="screen game" hidden>
+    <header class="bar">
+      <button class="icon-btn" id="backBtn" type="button" aria-label="Back to animals">‹</button>
+      <div class="g-title"><span id="gEmoji" aria-hidden="true"></span> <span id="gName"></span></div>
+      <div class="g-progress" aria-label="Progress"><i id="gProg"></i><span id="gPct">0%</span></div>
+      <button class="icon-btn sound-btn" type="button">🔊</button>
+      <button class="icon-btn" id="resetBtn" type="button" aria-label="Start again" title="Start again">🔄</button>
+    </header>
+
+    <div class="stage">
+      <canvas id="board" aria-label="Coloring board"></canvas>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="tools" role="toolbar" aria-label="Tools">
+      <button type="button" data-tool="brush" aria-label="Brush: paint one square at a time" title="Brush (B)">🖌️</button>
+      <button type="button" data-tool="bucket" aria-label="Magic fill: paint a whole area" title="Magic fill (F)">🪣</button>
+      <button type="button" data-tool="hand" aria-label="Move the picture" title="Move (M, or hold Space)">✋</button>
+      <span class="sep"></span>
+      <button type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in (+)">＋</button>
+      <button type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out (−)">－</button>
+      <button type="button" id="fitBtn" aria-label="Show whole picture" title="Whole picture (0)">⤢</button>
+      <span class="sep"></span>
+      <button type="button" id="hintBtn" aria-label="Hint: find a square" title="Hint (H)">💡</button>
+    </div>
+
+    <nav class="palette" id="palette" aria-label="Colors"></nav>
+  </section>
+
+  <dialog id="win" class="win">
+    <h2 id="winTitle" tabindex="-1" autofocus>Hooray!</h2>
+    <div class="win-pic">
+      <img id="winImg" alt="">
+      <p class="bubble" id="winSay"></p>
+    </div>
+    <div class="win-stars" id="winStars"></div>
+    <div class="win-actions">
+      <button type="button" class="pill-btn" id="replayBtn">🎬 Replay</button>
+      <button type="button" class="pill-btn" id="saveBtn">💾 Save picture</button>
+      <button type="button" class="pill-btn go" id="nextBtn">Next animal ›</button>
+      <button type="button" class="pill-btn ghost" id="homeBtn">🏠 All animals</button>
+    </div>
+  </dialog>
+
+  <canvas id="confetti" class="confetti" hidden></canvas>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
