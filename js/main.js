@@ -1,4 +1,4 @@
-import { ANIMALS, LEVELS } from './art.js';
+import { CATEGORIES, ALL, LEVELS } from './art.js';
 import { rasterize } from './raster.js';
 import { Board, drawThumb } from './board.js';
 import { store } from './store.js';
@@ -11,6 +11,7 @@ const game = $('#game');
 const win = $('#win');
 
 let levelIdx = Math.max(0, LEVELS.findIndex((l) => l.id === store.setting('level', 'easy')));
+let catIdx = Math.max(0, CATEGORIES.findIndex((c) => c.id === store.setting('cat', CATEGORIES[0].id)));
 let current = null; // { animal, level, grid }
 let saveTimer = 0;
 
@@ -47,7 +48,26 @@ const board = new Board($('#board'), {
 
 function renderHome() {
   $('#starTotal').textContent = store.starCount();
-  $('#starMax').textContent = ANIMALS.length * LEVELS.length;
+  $('#starMax').textContent = ALL.length * LEVELS.length;
+  $('#prizeNote').hidden = bucketUnlocked();
+
+  const cats = $('#cats');
+  cats.innerHTML = '';
+  CATEGORIES.forEach((cat, i) => {
+    const got = cat.items.reduce((n, a) => n + LEVELS.filter((L) => store.isDone(a.id, L.id)).length, 0);
+    const b = document.createElement('button');
+    b.className = 'cat-tab';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', String(i === catIdx));
+    b.dataset.cat = cat.id;
+    b.innerHTML = `<span class="cat-emoji">${cat.emoji}</span><span class="cat-name">${cat.name}</span><span class="cat-stars">★ ${got}/${cat.items.length * LEVELS.length}</span>`;
+    b.onclick = () => {
+      catIdx = i;
+      store.setSetting('cat', cat.id);
+      renderHome();
+    };
+    cats.appendChild(b);
+  });
 
   const levels = $('#levels');
   levels.innerHTML = '';
@@ -67,9 +87,11 @@ function renderHome() {
   });
 
   const level = LEVELS[levelIdx];
+  const cat = CATEGORIES[catIdx];
+  $('#galleryTitle').textContent = `${cat.emoji} ${cat.name}`;
   const gallery = $('#gallery');
   gallery.innerHTML = '';
-  ANIMALS.forEach((a, i) => {
+  cat.items.forEach((a, i) => {
     const grid = rasterize(a, level.size);
     const order = store.progress(a.id, level.id, grid.hash);
     const complete = order.length === grid.cells.length;
@@ -96,8 +118,9 @@ function renderHome() {
 
 $('#surprise').onclick = () => {
   const level = LEVELS[levelIdx];
-  const open = ANIMALS.filter((a) => !store.isDone(a.id, level.id));
-  const pool = open.length ? open : ANIMALS;
+  const items = CATEGORIES[catIdx].items;
+  const open = items.filter((a) => !store.isDone(a.id, level.id));
+  const pool = open.length ? open : items;
   go(pool[Math.floor(Math.random() * pool.length)].id, level.id);
 };
 
@@ -110,7 +133,7 @@ function go(animalId, levelId) {
 
 function route() {
   const m = location.hash.match(/^#\/(\w+)\/(\w+)/);
-  const animal = m && ANIMALS.find((a) => a.id === m[1]);
+  const animal = m && ALL.find((a) => a.id === m[1]);
   const level = m && LEVELS.find((l) => l.id === m[2]);
   if (win.open) win.close();
   if (animal && level) openGame(animal, level);
@@ -137,7 +160,9 @@ function openGame(animal, level) {
   $('#gName').textContent = animal.name;
 
   board.load(grid, store.progress(animal.id, level.id, grid.hash));
-  setTool(level.tool);
+  syncLock();
+  const tool = level.tool === 'bucket' && !bucketUnlocked() ? 'brush' : level.tool;
+  setTool(tool);
   buildPalette();
   updateProgress();
   const first = board.remaining.findIndex((r) => r > 0);
@@ -145,7 +170,7 @@ function openGame(animal, level) {
 
   if (board.complete) toast('All done! Tap 🔄 to color it again', 3500);
   else if (!board.order.length) {
-    toast(level.tool === 'bucket'
+    toast(tool === 'bucket'
       ? 'Pick a color, then tap a gray area. Magic fill does the rest!'
       : 'Pick a color, then tap or drag over the squares with its number', 4000);
   }
@@ -162,7 +187,11 @@ function buildPalette() {
     b.style.setProperty('--c', hex);
     b.style.setProperty('--txt', ink(hex));
     b.innerHTML = `<span class="num">${k + 1}</span><span class="check" aria-hidden="true">✓</span>`;
-    b.onclick = () => { sound.unlock(); selectColor(k); };
+    b.onclick = () => {
+      sound.unlock();
+      selectColor(k);
+      secretTap(k + 1);
+    };
     pal.appendChild(b);
     updateSwatch(k);
   });
@@ -206,6 +235,15 @@ function updateProgress() {
 }
 
 function setTool(t) {
+  if (t === 'bucket' && !bucketUnlocked()) {
+    sound.boop();
+    const b = $('.tools [data-tool="bucket"]');
+    b.classList.remove('wiggle');
+    void b.offsetWidth;
+    b.classList.add('wiggle');
+    toast('🔒 Magic Fill is a prize! Finish any picture to unlock it.', 3000);
+    return;
+  }
   board.setTool(t);
   document.querySelectorAll('.tools [data-tool]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
 }
@@ -221,21 +259,62 @@ function flushSave() {
   store.saveProgress(current.animal.id, current.level.id, current.grid.hash, board.order);
 }
 
+// ---------- magic fill prize ----------
+// Magic fill starts locked. Finishing any picture unlocks it for good,
+// and so does tapping the colour buttons 1 1 5 5 6 6 5 in a row.
+
+const SECRET = '1155665';
+let secret = '';
+
+function bucketUnlocked() {
+  return store.setting('bucket', false) || store.starCount() > 0;
+}
+
+function syncLock() {
+  const b = $('.tools [data-tool="bucket"]');
+  const locked = !bucketUnlocked();
+  b.classList.toggle('locked', locked);
+  b.setAttribute('aria-label', locked ? 'Magic fill (locked: finish any picture to unlock)' : 'Magic fill: paint a whole area');
+  b.title = locked ? 'Magic fill is locked: finish any picture to unlock it' : 'Magic fill (F)';
+}
+
+function secretTap(num) {
+  secret = (secret + num).slice(-SECRET.length);
+  if (secret !== SECRET) return;
+  secret = '';
+  if (bucketUnlocked()) {
+    toast('🤫 Psst… you already have Magic Fill!');
+    return;
+  }
+  store.setSetting('bucket', true);
+  syncLock();
+  setTool('bucket');
+  sound.fanfare();
+  confetti($('#confetti'));
+  toast('🤫 Secret code! 🪣 Magic Fill unlocked!', 3500);
+}
+
 // ---------- finishing ----------
 
 function finish() {
   flushSave();
   const { animal, level } = current;
   const firstTime = !store.isDone(animal.id, level.id);
+  const prize = !bucketUnlocked();
   store.setDone(animal.id, level.id, true);
+  if (prize) {
+    store.setSetting('bucket', true);
+    syncLock();
+  }
   updateProgress();
   sound.fanfare();
   setTimeout(() => sound.say(animal.says), 900);
   confetti($('#confetti'), current.grid.colors);
-  showWin(firstTime);
+  showWin(firstTime, prize);
 }
 
-function showWin(firstTime) {
+function showWin(firstTime, prize = false) {
+  $('#winPrize').hidden = !prize;
   const { animal, level } = current;
   $('#winImg').src = board.snapshot(16).toDataURL();
   $('#winImg').alt = `Your finished ${animal.name}`;
@@ -262,8 +341,9 @@ $('#saveBtn').onclick = () => {
   });
 };
 $('#nextBtn').onclick = () => {
-  const i = ANIMALS.indexOf(current.animal);
-  go(ANIMALS[(i + 1) % ANIMALS.length].id, current.level.id);
+  const cat = CATEGORIES.find((c) => c.items.some((a) => a.id === current.animal.id));
+  const i = cat.items.findIndex((a) => a.id === current.animal.id);
+  go(cat.items[(i + 1) % cat.items.length].id, current.level.id);
 };
 $('#homeBtn').onclick = () => { location.hash = ''; };
 win.addEventListener('cancel', () => {});
@@ -303,7 +383,10 @@ syncSound();
 document.addEventListener('keydown', (e) => {
   if (game.hidden || win.open || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key;
-  if (/^[1-9]$/.test(k) && Number(k) <= board.remaining.length) selectColor(Number(k) - 1);
+  if (/^[1-9]$/.test(k) && Number(k) <= board.remaining.length) {
+    selectColor(Number(k) - 1);
+    secretTap(k);
+  }
   else if (k === '+' || k === '=') board.zoomBy(1.4);
   else if (k === '-' || k === '_') board.zoomBy(1 / 1.4);
   else if (k === '0') board.fit();

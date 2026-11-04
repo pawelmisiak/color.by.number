@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Color Critters</title>
-  <meta name="description" content="Color-by-number game with funny animals for kids.">
+  <meta name="description" content="Color-by-number game for kids: funny animals, sea creatures, dinosaurs and silly snacks.">
   <meta name="theme-color" content="#ffb84d">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -29,22 +29,25 @@
         <button class="icon-btn sound-btn" type="button">🔊</button>
       </div>
     </header>
-    <p class="tagline">Pick a funny animal and paint it by numbers!</p>
+    <p class="tagline">Pick a silly picture and paint it by numbers!</p>
 
     <div class="levels" id="levels" role="radiogroup" aria-label="Difficulty"></div>
+    <p class="prize-note" id="prizeNote" hidden>🔒 <b>🪣 Magic Fill</b> is a prize! Finish any picture to unlock it.</p>
+
+    <div class="cats" id="cats" role="tablist" aria-label="Categories"></div>
 
     <div class="gallery-head">
-      <h2>Animals</h2>
+      <h2 id="galleryTitle">Pictures</h2>
       <button class="pill-btn" id="surprise" type="button">🎲 Surprise me!</button>
     </div>
     <div class="gallery" id="gallery"></div>
 
-    <p class="foot">Finish a picture on each level to collect all four stars ★★★★</p>
+    <p class="foot">Finish a picture on each level to collect all four of its stars ★★★★</p>
   </main>
 
   <section id="game" class="screen game" hidden>
     <header class="bar">
-      <button class="icon-btn" id="backBtn" type="button" aria-label="Back to animals">‹</button>
+      <button class="icon-btn" id="backBtn" type="button" aria-label="Back to pictures">‹</button>
       <div class="g-title"><span id="gEmoji" aria-hidden="true"></span> <span id="gName"></span></div>
       <div class="g-progress" aria-label="Progress"><i id="gProg"></i><span id="gPct">0%</span></div>
       <button class="icon-btn sound-btn" type="button">🔊</button>
@@ -77,12 +80,13 @@
       <img id="winImg" alt="">
       <p class="bubble" id="winSay"></p>
     </div>
+    <p class="prize" id="winPrize" hidden>🎁 <b>New skill unlocked: 🪣 Magic Fill!</b><br>Tap an area to paint all of it at once.</p>
     <div class="win-stars" id="winStars"></div>
     <div class="win-actions">
       <button type="button" class="pill-btn" id="replayBtn">🎬 Replay</button>
       <button type="button" class="pill-btn" id="saveBtn">💾 Save picture</button>
-      <button type="button" class="pill-btn go" id="nextBtn">Next animal ›</button>
-      <button type="button" class="pill-btn ghost" id="homeBtn">🏠 All animals</button>
+      <button type="button" class="pill-btn go" id="nextBtn">Next picture ›</button>
+      <button type="button" class="pill-btn ghost" id="homeBtn">🏠 All pictures</button>
     </div>
   </dialog>
 
