@@ -7,12 +7,18 @@ import animals from './art/animals.js';
 import sea from './art/sea.js';
 import dinos from './art/dinos.js';
 import food from './art/food.js';
+import vehicles from './art/vehicles.js';
+import monsters from './art/monsters.js';
+import blocky from './art/blocky.js';
 
 export const CATEGORIES = [
   { id: 'animals', name: 'Funny Animals', emoji: '🐾', items: animals },
   { id: 'sea', name: 'Under the Sea', emoji: '🌊', items: sea },
   { id: 'dinos', name: 'Dino World', emoji: '🦖', items: dinos },
   { id: 'food', name: 'Silly Snacks', emoji: '🍩', items: food },
+  { id: 'vehicles', name: 'Vroom Vroom', emoji: '🚗', items: vehicles },
+  { id: 'monsters', name: 'Silly Monsters', emoji: '👾', items: monsters },
+  { id: 'blocky', name: 'Blocky World', emoji: '🧱', items: blocky },
 ];
 
 export const ALL = CATEGORIES.flatMap((cat) => cat.items.map((item) => ({ ...item, cat: cat.id })));

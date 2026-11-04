@@ -53,3 +53,26 @@ export function star(k, cx, cy, R, r, n = 5, keep) {
   }
   return p(k, pts, keep);
 }
+
+/**
+ * Pixel art: one string per row, one character per pixel, drawn on a
+ * square grid that fills the 100 x 100 canvas. `colors` maps characters to
+ * colour numbers; characters not in the map (like '.') are left empty.
+ * With `half: true` each row is the left half and gets mirrored.
+ */
+export function pix(rows, colors, { half = false } = {}) {
+  const lines = half ? rows.map((row) => row + [...row].reverse().join('')) : rows;
+  const size = 100 / lines.length;
+  const out = [];
+  lines.forEach((line, y) => {
+    if (line.length !== lines.length) throw new Error(`pix row ${y} is ${line.length} wide, expected ${lines.length}`);
+    for (let x = 0; x < line.length; ) {
+      const ch = line[x];
+      let end = x + 1;
+      while (end < line.length && line[end] === ch) end++;
+      if (ch in colors) out.push(r(colors[ch], x * size, y * size, (end - x) * size, size));
+      x = end;
+    }
+  });
+  return out;
+}

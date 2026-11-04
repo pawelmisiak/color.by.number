@@ -1,16 +1,19 @@
 # Color Critters 🎨
 
-A color-by-number game for kids with 28 silly pictures in 4 categories. Pick a color, tap the squares with its number, and watch the picture appear.
+A color-by-number game for kids with 46 silly pictures in 7 categories. Pick a color, tap the squares with its number, and watch the picture appear.
 
 It's plain HTML, CSS and JavaScript with no build step, so GitHub Pages can serve it as-is.
 
 ## Features
 
-- **4 categories, 28 pictures:**
+- **7 categories, 46 pictures:**
   - 🐾 **Funny Animals:** Silly Cat, Muddy Pig, Goofy Frog, Winky Owl, Party Penguin, Cool Lion, Wiggly Octopus, Floppy Bunny, Moo Cow, Hungry Panda.
   - 🌊 **Under the Sea:** Splashy Whale, Snappy Crab, Puffy Pufferfish, Speedy Turtle, Jiggly Jellyfish, Smiley Shark.
   - 🦖 **Dino World:** Tiny-Arms Rex, Spiky Stego, Trixie Triceratops, Tall Sally, Flappy Ptero, Baby Dino.
   - 🍩 **Silly Snacks:** Dizzy Donut, Silly Sundae, Cheesy Pizza, Party Cupcake, Wacky Watermelon, Sweet Strawberry.
+  - 🚗 **Vroom Vroom:** Racing Pup, Fire Truck, School Bus, Rocket Ship, Zippy Plane, Choo-Choo Train.
+  - 👾 **Silly Monsters:** Fuzzy Wuzzy, Blobby, Giggly Ghost, Chompy, Mini Mummy, Zippy Alien.
+  - 🧱 **Blocky World:** chunky pixel art (Beep-Boop Robot, Pixel Castle, Treasure Chest, Pixel Dragon, Mushroom House, Cube Cat).
 - **4 difficulty levels:** each drawing is vector shapes turned into a grid, so one drawing works at every size.
   - 🐣 **Easy:** 16 × 16 squares. Starts with magic fill once it's unlocked.
   - 🐥 **Medium:** 24 × 24, starts with the brush.
@@ -19,7 +22,7 @@ It's plain HTML, CSS and JavaScript with no build step, so GitHub Pages can serv
 - **🪣 Magic fill is a prize:** it starts locked. Finishing any picture unlocks it for good, on that device.
 - **Tools:** brush (tap or drag), 🪣 magic fill (one tap paints a whole area), ✋ move, zoom, and 💡 hint (zooms to a square that still needs the selected color).
 - **Kid-friendly help:** gray outlines like a coloring book, the squares for the current color are highlighted, a tap on the wrong square wiggles the right color, and the next color is picked automatically when one is finished.
-- **Rewards:** confetti, a little tune, the picture "talks" (speech synthesis), and a star for each level: 112 stars to collect.
+- **Rewards:** confetti, a little tune, the picture "talks" (speech synthesis), and a star for each level: 184 stars to collect.
 - **Replay** a time-lapse of how you colored the picture, and **save** it as a PNG.
 - **Progress is saved** in the browser (localStorage), on each device separately.
 - Works on phones, tablets and computers: pinch to zoom, two-finger pan, mouse wheel zoom.
@@ -53,7 +56,7 @@ Then open `http://<this-computer's-IP>:8000` on any device on the same Wi-Fi.
 
 ## Adding a new picture or category
 
-Pictures live in `js/art/`, one file per category (`animals.js`, `sea.js`, `dinos.js`, `food.js`), and `js/art.js` lists the categories. Each picture has a unique `id`, a palette of 6–8 colors, and a list of shapes on a 100 × 100 canvas:
+Pictures live in `js/art/`, one file per category (`animals.js`, `sea.js`, `dinos.js`, `food.js`, `vehicles.js`, `monsters.js`, `blocky.js`), and `js/art.js` lists the categories. Each picture has a unique `id`, a palette of 6–8 colors, and a list of shapes on a 100 × 100 canvas:
 
 ```js
 c(color, cx, cy, r)                 // circle
@@ -62,6 +65,7 @@ r(color, x, y, w, h, roundness)     // rectangle
 p(color, [x1, y1, x2, y2, ...])     // polygon
 d(color, 'M10 10 Q20 0 30 10 Z')    // SVG path (absolute M/L/Q/C/Z only)
 pair(shape)                         // the shape plus its mirror image
+pix(rows, colors, { half })         // pixel art from strings (see blocky.js)
 ```
 
 Later shapes are drawn on top of earlier ones. Add `KEEP` as the last argument for tiny details, like eyes, that must survive on the Easy grid.

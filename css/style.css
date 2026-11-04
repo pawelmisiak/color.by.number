@@ -143,6 +143,7 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 
 .cats {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   overflow-x: auto;
   padding: 4px 2px 10px;
@@ -448,6 +449,7 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 @media (max-width: 560px) {
   .levels { gap: 8px; grid-template-columns: repeat(2, 1fr); }
   .gallery-head h2 { font-size: 21px; }
+  .cats { flex-wrap: nowrap; }
   .cat-tab { padding: 6px 12px 6px 10px; }
   .cat-emoji { font-size: 24px; }
   .cat-name { font-size: 15px; }
