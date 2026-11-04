@@ -40,6 +40,7 @@
       <h2 id="galleryTitle">Pictures</h2>
       <button class="pill-btn" id="surprise" type="button">🎲 Surprise me!</button>
     </div>
+    <p class="level-note" id="levelNote" hidden></p>
     <div class="gallery" id="gallery"></div>
 
     <p class="foot">Finish a picture on each level to collect all four of its stars ★★★★</p>
@@ -81,11 +82,13 @@
       <p class="bubble" id="winSay"></p>
     </div>
     <p class="prize" id="winPrize" hidden>🎁 <b>New skill unlocked: 🪣 Magic Fill!</b><br>Tap an area to paint all of it at once.</p>
+    <p class="unlock" id="winUnlock" hidden></p>
     <div class="win-stars" id="winStars"></div>
     <div class="win-actions">
       <button type="button" class="pill-btn" id="replayBtn">🎬 Replay</button>
       <button type="button" class="pill-btn" id="saveBtn">💾 Save picture</button>
-      <button type="button" class="pill-btn go" id="nextBtn">Next picture ›</button>
+      <button type="button" class="pill-btn go" id="levelUpBtn" hidden>Play on Medium ›</button>
+      <button type="button" class="pill-btn wide" id="nextBtn">Next picture ›</button>
       <button type="button" class="pill-btn ghost" id="homeBtn">🏠 All pictures</button>
     </div>
   </dialog>

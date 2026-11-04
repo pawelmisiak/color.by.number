@@ -19,6 +19,7 @@ It's plain HTML, CSS and JavaScript with no build step, so GitHub Pages can serv
   - 🐥 **Medium:** 24 × 24, starts with the brush.
   - 🦅 **Hard:** 32 × 32, starts with the brush.
   - 🚀 **Super Hard:** 48 × 48, starts with the brush. Zoom in to see the numbers.
+- **Levels unlock picture by picture:** Easy is always open. A picture opens on Medium once it's finished on Easy, on Hard once it's finished on Medium, and so on. Tapping a locked picture opens the level that unlocks it. Pictures already started or finished on a level stay open.
 - **🪣 Magic fill is a prize:** it starts locked. Finishing any picture unlocks it for good, on that device.
 - **Tools:** brush (tap or drag), 🪣 magic fill (one tap paints a whole area), ✋ move, zoom, and 💡 hint (zooms to a square that still needs the selected color).
 - **Kid-friendly help:** gray outlines like a coloring book, the squares for the current color are highlighted, a tap on the wrong square wiggles the right color, and the next color is picked automatically when one is finished.

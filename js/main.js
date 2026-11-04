@@ -91,26 +91,32 @@ function renderHome() {
   $('#galleryTitle').textContent = `${cat.emoji} ${cat.name}`;
   const gallery = $('#gallery');
   gallery.innerHTML = '';
+  const li = levelIdx;
+  const note = $('#levelNote');
+  note.hidden = li === 0;
+  note.textContent = li ? `🔒 Pictures open up here after you finish them on ${LEVELS[li - 1].name}.` : '';
   cat.items.forEach((a, i) => {
     const grid = rasterize(a, level.size);
+    const locked = !isUnlocked(a, li);
     const order = store.progress(a.id, level.id, grid.hash);
     const complete = order.length === grid.cells.length;
     const pct = Math.round((order.length / grid.cells.length) * 100);
 
     const card = document.createElement('button');
-    card.className = 'card' + (complete ? ' is-done' : '');
+    card.className = 'card' + (complete ? ' is-done' : '') + (locked ? ' is-locked' : '');
     card.style.setProperty('--tilt', `${(i % 2 ? 1 : -1) * (0.6 + (i % 3) * 0.4)}deg`);
-    card.setAttribute('aria-label', `${a.name}${complete ? ', finished' : pct ? `, ${pct}% colored` : ''}`);
+    card.setAttribute('aria-label', `${a.name}${locked ? `, locked until finished on ${LEVELS[li - 1].name}` : complete ? ', finished' : pct ? `, ${pct}% colored` : ''}`);
 
     const cv = document.createElement('canvas');
     cv.className = 'thumb';
     drawThumb(cv, grid, new Set(order), complete);
 
     const stars = LEVELS.map((L) => `<span class="${store.isDone(a.id, L.id) ? 'on' : ''}" title="${L.name}">★</span>`).join('');
-    const badge = complete ? '<span class="badge">Done!</span>' : pct ? `<span class="mini-bar"><i style="width:${pct}%"></i></span>` : '<span class="badge new">New</span>';
+    const badge = locked ? '<span class="badge lock">🔒</span>' : complete ? '<span class="badge">Done!</span>' : pct ? `<span class="mini-bar"><i style="width:${pct}%"></i></span>` : '<span class="badge new">New</span>';
     card.innerHTML = `<span class="card-top">${badge}</span>`;
     card.appendChild(cv);
-    card.insertAdjacentHTML('beforeend', `<span class="card-name">${a.emoji} ${a.name}</span><span class="card-stars" aria-hidden="true">${stars}</span>`);
+    card.insertAdjacentHTML('beforeend', `<span class="card-name">${a.emoji} ${a.name}</span><span class="card-stars" aria-hidden="true">${stars}</span>`
+      + (locked ? `<span class="card-lock">Finish it on ${LEVELS[li - 1].name} first</span>` : ''));
     card.onclick = () => go(a.id, level.id);
     gallery.appendChild(card);
   });
@@ -119,8 +125,10 @@ function renderHome() {
 $('#surprise').onclick = () => {
   const level = LEVELS[levelIdx];
   const items = CATEGORIES[catIdx].items;
-  const open = items.filter((a) => !store.isDone(a.id, level.id));
-  const pool = open.length ? open : items;
+  const li = LEVELS.indexOf(level);
+  const playable = items.filter((a) => isUnlocked(a, li));
+  const open = playable.filter((a) => !store.isDone(a.id, level.id));
+  const pool = open.length ? open : playable.length ? playable : items;
   go(pool[Math.floor(Math.random() * pool.length)].id, level.id);
 };
 
@@ -136,8 +144,14 @@ function route() {
   const animal = m && ALL.find((a) => a.id === m[1]);
   const level = m && LEVELS.find((l) => l.id === m[2]);
   if (win.open) win.close();
-  if (animal && level) openGame(animal, level);
-  else showHome();
+  if (!animal || !level) return showHome();
+  const want = LEVELS.indexOf(level);
+  const li = playableLevel(animal, want);
+  if (li === want) return openGame(animal, level);
+  // Locked: open the level that unlocks it instead, and say why.
+  history.replaceState(null, '', `#/${animal.id}/${LEVELS[li].id}`);
+  openGame(animal, LEVELS[li]);
+  toast(`🔒 Finish ${animal.name} on ${LEVELS[li].name} to unlock ${LEVELS[li + 1].name}!`, 4000);
 }
 
 function showHome() {
@@ -259,6 +273,25 @@ function flushSave() {
   store.saveProgress(current.animal.id, current.level.id, current.grid.hash, board.order);
 }
 
+// ---------- level locks ----------
+// Easy is always open. A picture unlocks on a harder level once it has been
+// finished on the level below. Pictures already started or finished on a
+// level stay open, so nobody loses work.
+
+function isUnlocked(a, li) {
+  if (li <= 0) return true;
+  const L = LEVELS[li];
+  if (store.isDone(a.id, LEVELS[li - 1].id) || store.isDone(a.id, L.id)) return true;
+  const grid = rasterize(a, L.size);
+  return store.progress(a.id, L.id, grid.hash).length > 0;
+}
+
+/** The hardest level of a picture that can be played now, up to `li`. */
+function playableLevel(a, li) {
+  while (li > 0 && !isUnlocked(a, li)) li--;
+  return li;
+}
+
 // ---------- magic fill prize ----------
 // Magic fill starts locked. Finishing any picture unlocks it for good,
 // and so does tapping the colour buttons 1 1 5 5 6 6 5 in a row.
@@ -315,6 +348,13 @@ function finish() {
 
 function showWin(firstTime, prize = false) {
   $('#winPrize').hidden = !prize;
+  const li = LEVELS.indexOf(current.level);
+  const up = LEVELS[li + 1];
+  $('#winUnlock').hidden = !(up && firstTime);
+  if (up) $('#winUnlock').textContent = `🔓 ${current.animal.name} is now unlocked on ${up.name}!`;
+  $('#levelUpBtn').hidden = !up;
+  if (up) $('#levelUpBtn').textContent = `${up.emoji} Play on ${up.name} ›`;
+  $('#nextBtn').classList.toggle('go', !up);
   const { animal, level } = current;
   $('#winImg').src = board.snapshot(16).toDataURL();
   $('#winImg').alt = `Your finished ${animal.name}`;
@@ -344,6 +384,10 @@ $('#nextBtn').onclick = () => {
   const cat = CATEGORIES.find((c) => c.items.some((a) => a.id === current.animal.id));
   const i = cat.items.findIndex((a) => a.id === current.animal.id);
   go(cat.items[(i + 1) % cat.items.length].id, current.level.id);
+};
+$('#levelUpBtn').onclick = () => {
+  const up = LEVELS[LEVELS.indexOf(current.level) + 1];
+  if (up) go(current.animal.id, up.id);
 };
 $('#homeBtn').onclick = () => { location.hash = ''; };
 win.addEventListener('cancel', () => {});

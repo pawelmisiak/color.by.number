@@ -218,6 +218,11 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
   transform: rotate(6deg);
 }
 .badge.new { background: var(--berry); }
+.badge.lock { background: var(--ink); }
+.card.is-locked .thumb { opacity: 0.4; filter: blur(1.5px); }
+.card.is-locked .card-name { color: var(--muted); }
+.card-lock { font-size: 13px; color: var(--muted); margin-top: -4px; }
+.level-note { margin: -4px 0 16px; color: var(--muted); font-size: 16px; }
 .mini-bar { width: 60%; margin: 6px; height: 9px; border-radius: 9px; background: #eee3d1; overflow: hidden; }
 .mini-bar i { display: block; height: 100%; background: var(--sun); border-radius: 9px; }
 .foot { text-align: center; color: var(--muted); margin-top: 30px; }
@@ -440,7 +445,16 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 @keyframes starpop { from { transform: scale(0) rotate(-180deg); } to { transform: scale(1) rotate(0); } }
 .win-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .win-actions .go { grid-column: 1 / -1; font-size: 19px; padding: 14px; }
-.win-actions .ghost { grid-column: 1 / -1; }
+.win-actions .ghost, .win-actions .wide { grid-column: 1 / -1; }
+.unlock {
+  margin: 12px 0 0;
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: #e3f7ee;
+  color: #1f6f55;
+  font-size: 16px;
+  font-weight: 600;
+}
 
 .confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; }
 
