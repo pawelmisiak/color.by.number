@@ -14,16 +14,17 @@ It's plain HTML, CSS and JavaScript with no build step, so GitHub Pages can serv
   - 🚗 **Vroom Vroom:** Racing Pup, Fire Truck, School Bus, Rocket Ship, Zippy Plane, Choo-Choo Train.
   - 👾 **Silly Monsters:** Fuzzy Wuzzy, Blobby, Giggly Ghost, Chompy, Mini Mummy, Zippy Alien.
   - 🧱 **Blocky World:** chunky pixel art (Beep-Boop Robot, Pixel Castle, Treasure Chest, Pixel Dragon, Mushroom House, Cube Cat).
-- **4 difficulty levels:** each drawing is vector shapes turned into a grid, so one drawing works at every size.
+- **5 difficulty levels:** each drawing is vector shapes turned into a grid, so one drawing works at every size.
   - 🐣 **Easy:** 16 × 16 squares. Starts with magic fill once it's unlocked.
   - 🐥 **Medium:** 24 × 24, starts with the brush.
   - 🦅 **Hard:** 32 × 32, starts with the brush.
   - 🚀 **Super Hard:** 48 × 48, starts with the brush. Zoom in to see the numbers.
+  - 🌈 **Mega:** 512 × 512 (262,144 squares) with extra shades: every shape gets a shadow and a highlight, so pictures have 14–23 colors. Starts with magic fill. Zoomed out, the board shows the picture as line art; zoom in to see the numbers. (Blocky World stays flat pixel art.)
 - **Levels unlock picture by picture:** Easy is always open. A picture opens on Medium once it's finished on Easy, on Hard once it's finished on Medium, and so on. Tapping a locked picture opens the level that unlocks it. Pictures already started or finished on a level stay open.
 - **🪣 Magic fill is a prize:** it starts locked. Finishing any picture unlocks it for good, on that device.
 - **Tools:** brush (tap or drag), 🪣 magic fill (one tap paints a whole area), ✋ move, zoom, and 💡 hint (zooms to a square that still needs the selected color).
 - **Kid-friendly help:** gray outlines like a coloring book, the squares for the current color are highlighted, a tap on the wrong square wiggles the right color, and the next color is picked automatically when one is finished.
-- **Rewards:** confetti, a little tune, the picture "talks" (speech synthesis), and a star for each level: 184 stars to collect.
+- **Rewards:** confetti, a little tune, the picture "talks" (speech synthesis), and a star for each level: 230 stars to collect.
 - **Replay** a time-lapse of how you colored the picture, and **save** it as a PNG.
 - **Progress is saved** in the browser (localStorage), on each device separately.
 - Works on phones, tablets and computers: pinch to zoom, two-finger pan, mouse wheel zoom.

@@ -6,6 +6,18 @@ const EMPTY = '#ffffff';
 const GAP = '#e4e7ee';
 const HILITE = '#c3cee0';
 const BORDER = '#8d97ab';
+const EDGE = '#b4bccb';
+const HILITE_EDGE = '#8e9bb5';
+
+// When more cells than this are on screen (zoomed out on the Mega level), the
+// board is drawn from a one-pixel-per-cell image instead of cell by cell.
+const IMAGE_MODE_CELLS = 6000;
+
+/** '#rrggbb' as a little-endian RGBA word for a Uint32Array view of ImageData. */
+export function pack(hex) {
+  const v = parseInt(hex.slice(1), 16);
+  return ((255 << 24) | ((v & 255) << 16) | (v & 0xff00) | (v >> 16)) >>> 0;
+}
 
 export class Board {
   constructor(canvas, events) {
@@ -50,7 +62,68 @@ export class Board {
     this.complete = this.order.length === this.cells.length;
     this.locked = false;
     this.pulse = this.flash = this.tween = null;
+    this.setupImage();
     this.resize(true);
+  }
+
+  // ---------- image mode (big grids) ----------
+
+  setupImage() {
+    const n = this.n;
+    this.big = n * n > IMAGE_MODE_CELLS;
+    this.batches = [];
+    if (!this.big) { this.img = null; return; }
+    // Cells on the border of an area are tinted, so the picture shows as line art.
+    this.edge = new Uint8Array(n * n);
+    const c = this.cells;
+    for (let i = 0; i < n * n; i++) {
+      const x = i % n;
+      if ((x > 0 && c[i - 1] !== c[i]) || (x < n - 1 && c[i + 1] !== c[i]) || (i >= n && c[i - n] !== c[i]) || (i < n * n - n && c[i + n] !== c[i])) this.edge[i] = 1;
+    }
+    this.img = document.createElement('canvas');
+    this.img.width = this.img.height = n;
+    this.imgCtx = this.img.getContext('2d');
+    this.imgData = this.imgCtx.createImageData(n, n);
+    this.px32 = new Uint32Array(this.imgData.data.buffer);
+    this.packed = this.grid.colors.map(pack);
+    this.packedUI = [EMPTY, HILITE, EDGE, HILITE_EDGE].map(pack);
+    this.imgStale = true;
+  }
+
+  emptyPx(i) {
+    const sel = this.cells[i] === this.sel ? 1 : 0;
+    return this.packedUI[sel + (this.edge[i] ? 2 : 0)];
+  }
+
+  /** Bring the image up to date: full rebuild if needed, then newly visible cells. */
+  syncImage(now) {
+    const px = this.px32;
+    if (this.imgStale) {
+      for (let i = 0; i < px.length; i++) {
+        px[i] = this.filled[i] && now >= this.showAt[i] ? this.packed[this.cells[i]] : this.emptyPx(i);
+      }
+      this.imgStale = false;
+      this.imgDirty = true;
+    }
+    if (this.batches.length) {
+      for (const b of this.batches) {
+        while (b.pos < b.cells.length && now >= this.showAt[b.cells[b.pos]]) {
+          const i = b.cells[b.pos++];
+          px[i] = this.packed[this.cells[i]];
+          this.imgDirty = true;
+        }
+      }
+      this.batches = this.batches.filter((b) => b.pos < b.cells.length);
+    }
+    if (this.imgDirty) {
+      this.imgCtx.putImageData(this.imgData, 0, 0);
+      this.imgDirty = false;
+    }
+  }
+
+  /** Cells (in the order they will appear) that the image should pick up. */
+  queueImage(cells) {
+    if (this.big) this.batches.push({ cells, pos: 0 });
   }
 
   resize(refit) {
@@ -111,6 +184,7 @@ export class Board {
 
   setColor(k) {
     this.sel = k;
+    if (this.big) this.imgStale = true;
     this.request();
   }
 
@@ -143,6 +217,7 @@ export class Board {
     if (this.tool === 'bucket') this.flood(i);
     else {
       this.fillCell(i, performance.now());
+      this.queueImage([i]);
       this.ev.onFill?.(k, 1);
       this.after(k);
     }
@@ -168,6 +243,7 @@ export class Board {
     const step = Math.min(22, 650 / maxD);
     const now = performance.now();
     for (const i of queue) this.fillCell(i, now + depth.get(i) * step);
+    this.queueImage(queue);
     this.ev.onFill?.(k, queue.length);
     this.after(k);
   }
@@ -218,19 +294,32 @@ export class Board {
     const step = Math.min(30, ms / this.order.length);
     this.order.forEach((i, rank) => { this.showAt[i] = now + rank * step; });
     this.animUntil = now + this.order.length * step + 220;
+    if (this.big) {
+      this.imgStale = true;
+      this.batches = [];
+      this.queueImage(this.order.slice());
+    }
     this.request();
     setTimeout(() => { this.locked = false; done?.(); }, this.animUntil - performance.now() + 300);
   }
 
   /** Finished picture as a canvas, `px` pixels per cell. */
   snapshot(px) {
+    const n = this.n;
+    const base = document.createElement('canvas');
+    base.width = base.height = n;
+    const bg = base.getContext('2d');
+    const img = bg.createImageData(n, n);
+    const p32 = new Uint32Array(img.data.buffer);
+    const packed = this.grid.colors.map(pack);
+    for (let i = 0; i < p32.length; i++) p32[i] = packed[this.cells[i]];
+    bg.putImageData(img, 0, 0);
+    if (px <= 1) return base;
     const cv = document.createElement('canvas');
-    cv.width = cv.height = this.n * px;
+    cv.width = cv.height = n * px;
     const g = cv.getContext('2d');
-    this.cells.forEach((k, i) => {
-      g.fillStyle = this.grid.colors[k];
-      g.fillRect((i % this.n) * px, Math.floor(i / this.n) * px, px, px);
-    });
+    g.imageSmoothingEnabled = false;
+    g.drawImage(base, 0, 0, n * px, n * px);
     return cv;
   }
 
@@ -281,74 +370,81 @@ export class Board {
 
     let animating = this.tween || now < this.animUntil;
     const visible = (i) => this.filled[i] && now >= this.showAt[i];
+    const imageMode = this.big && (c1 - c0 + 1) * (r1 - r0 + 1) > IMAGE_MODE_CELLS;
 
-    for (let r = r0; r <= r1; r++) {
-      const y0 = ey(r);
-      const y1 = ey(r + 1);
-      for (let c = c0; c <= c1; c++) {
-        const i = r * n + c;
-        const x0 = ex(c);
-        const x1 = ex(c + 1);
-        const k = this.cells[i];
-        if (!visible(i)) {
-          g.fillStyle = k === this.sel && !this.complete ? HILITE : EMPTY;
-          g.fillRect(x0, y0, x1 - x0 - gap, y1 - y0 - gap);
-          continue;
-        }
-        const age = now - this.showAt[i];
-        g.fillStyle = colors[k];
-        if (age < 200) {
-          const t = age / 200;
-          const sc = 0.35 + 0.65 * (1 - Math.pow(1 - t, 2)) + Math.sin(t * Math.PI) * 0.12;
-          const w = (x1 - x0) * sc;
-          const h = (y1 - y0) * sc;
-          g.fillStyle = EMPTY;
-          g.fillRect(x0, y0, x1 - x0 - gap, y1 - y0 - gap);
+    if (imageMode) {
+      this.syncImage(now);
+      g.imageSmoothingEnabled = false;
+      g.drawImage(this.img, 0, 0, n, n, ex(0), ey(0), ex(n) - ex(0), ey(n) - ey(0));
+    } else {
+      for (let r = r0; r <= r1; r++) {
+        const y0 = ey(r);
+        const y1 = ey(r + 1);
+        for (let c = c0; c <= c1; c++) {
+          const i = r * n + c;
+          const x0 = ex(c);
+          const x1 = ex(c + 1);
+          const k = this.cells[i];
+          if (!visible(i)) {
+            g.fillStyle = k === this.sel && !this.complete ? HILITE : EMPTY;
+            g.fillRect(x0, y0, x1 - x0 - gap, y1 - y0 - gap);
+            continue;
+          }
+          const age = now - this.showAt[i];
           g.fillStyle = colors[k];
-          g.fillRect((x0 + x1 - w) / 2, (y0 + y1 - h) / 2, w, h);
-        } else {
-          g.fillRect(x0, y0, x1 - x0, y1 - y0);
-        }
-      }
-    }
-
-    // Outlines between areas with different numbers, like a colouring book.
-    if (!this.complete) {
-      g.beginPath();
-      for (let r = r0; r <= r1; r++) {
-        for (let c = c0; c <= c1; c++) {
-          const i = r * n + c;
-          const k = this.cells[i];
-          const vi = visible(i);
-          if (c < n - 1 && this.cells[i + 1] !== k && !(vi && visible(i + 1))) {
-            g.moveTo(ex(c + 1), ey(r));
-            g.lineTo(ex(c + 1), ey(r + 1));
-          }
-          if (r < n - 1 && this.cells[i + n] !== k && !(vi && visible(i + n))) {
-            g.moveTo(ex(c), ey(r + 1));
-            g.lineTo(ex(c + 1), ey(r + 1));
+          if (age < 200) {
+            const t = age / 200;
+            const sc = 0.35 + 0.65 * (1 - Math.pow(1 - t, 2)) + Math.sin(t * Math.PI) * 0.12;
+            const w = (x1 - x0) * sc;
+            const h = (y1 - y0) * sc;
+            g.fillStyle = EMPTY;
+            g.fillRect(x0, y0, x1 - x0 - gap, y1 - y0 - gap);
+            g.fillStyle = colors[k];
+            g.fillRect((x0 + x1 - w) / 2, (y0 + y1 - h) / 2, w, h);
+          } else {
+            g.fillRect(x0, y0, x1 - x0, y1 - y0);
           }
         }
       }
-      g.strokeStyle = BORDER;
-      g.lineWidth = Math.max(1, Math.min(3 * dpr, cs * 0.07));
-      g.stroke();
-    }
 
-    // Numbers, once the squares are big enough to read.
-    if (!this.complete && cs >= 13 * dpr) {
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      const fs = Math.min(cs * 0.5, 30 * dpr);
-      for (let r = r0; r <= r1; r++) {
-        for (let c = c0; c <= c1; c++) {
-          const i = r * n + c;
-          if (visible(i)) continue;
-          const k = this.cells[i];
-          const on = k === this.sel;
-          g.font = `${on ? 700 : 500} ${fs}px Fredoka, ui-rounded, system-ui, sans-serif`;
-          g.fillStyle = on ? '#1f2a44' : '#8a93a6';
-          g.fillText(String(k + 1), (ex(c) + ex(c + 1)) / 2, (ey(r) + ey(r + 1)) / 2 + fs * 0.04);
+      // Outlines between areas with different numbers, like a colouring book.
+      if (!this.complete) {
+        g.beginPath();
+        for (let r = r0; r <= r1; r++) {
+          for (let c = c0; c <= c1; c++) {
+            const i = r * n + c;
+            const k = this.cells[i];
+            const vi = visible(i);
+            if (c < n - 1 && this.cells[i + 1] !== k && !(vi && visible(i + 1))) {
+              g.moveTo(ex(c + 1), ey(r));
+              g.lineTo(ex(c + 1), ey(r + 1));
+            }
+            if (r < n - 1 && this.cells[i + n] !== k && !(vi && visible(i + n))) {
+              g.moveTo(ex(c), ey(r + 1));
+              g.lineTo(ex(c + 1), ey(r + 1));
+            }
+          }
+        }
+        g.strokeStyle = BORDER;
+        g.lineWidth = Math.max(1, Math.min(3 * dpr, cs * 0.07));
+        g.stroke();
+      }
+
+      // Numbers, once the squares are big enough to read.
+      if (!this.complete && cs >= 13 * dpr) {
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        const fs = Math.min(cs * 0.5, 30 * dpr);
+        for (let r = r0; r <= r1; r++) {
+          for (let c = c0; c <= c1; c++) {
+            const i = r * n + c;
+            if (visible(i)) continue;
+            const k = this.cells[i];
+            const on = k === this.sel;
+            g.font = `${on ? 700 : 500} ${fs}px Fredoka, ui-rounded, system-ui, sans-serif`;
+            g.fillStyle = on ? '#1f2a44' : '#8a93a6';
+            g.fillText(String(k + 1), (ex(c) + ex(c + 1)) / 2, (ey(r) + ey(r + 1)) / 2 + fs * 0.04);
+          }
         }
       }
     }
@@ -528,17 +624,20 @@ export class Board {
 
 /** Small preview: coloured cells in full colour, the rest as a soft grey hint. */
 export function drawThumb(canvas, grid, filled, done) {
+  // One pixel per cell; CSS scales it up with crisp (pixelated) edges.
   const n = grid.n;
-  canvas.width = canvas.height = n * 4;
+  canvas.width = canvas.height = n;
+  if (n > 64) canvas.style.imageRendering = 'auto';
   const g = canvas.getContext('2d');
+  const img = g.createImageData(n, n);
+  const p32 = new Uint32Array(img.data.buffer);
+  const color = grid.colors.map(pack);
   const grey = grid.colors.map((hex) => {
     const v = parseInt(hex.slice(1), 16);
     const l = (0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255;
-    const t = Math.round(150 + l * 92);
-    return `rgb(${t},${t},${t + 4})`;
+    const t = Math.round(150 + l * 92).toString(16).padStart(2, '0');
+    return pack('#' + t + t + Math.min(255, parseInt(t, 16) + 4).toString(16).padStart(2, '0'));
   });
-  grid.cells.forEach((k, i) => {
-    g.fillStyle = done || filled.has(i) ? grid.colors[k] : grey[k];
-    g.fillRect((i % n) * 4, Math.floor(i / n) * 4, 4, 4);
-  });
+  grid.cells.forEach((k, i) => { p32[i] = done || filled.has(i) ? color[k] : grey[k]; });
+  g.putImageData(img, 0, 0);
 }

@@ -29,4 +29,5 @@ export const LEVELS = [
   { id: 'medium', name: 'Medium', emoji: '🐥', size: 24, tool: 'brush', blurb: 'More squares to paint' },
   { id: 'hard', name: 'Hard', emoji: '🦅', size: 32, tool: 'brush', blurb: 'Tiny squares, big challenge' },
   { id: 'super', name: 'Super Hard', emoji: '🚀', size: 48, tool: 'brush', blurb: 'Super tiny squares for pros' },
+  { id: 'mega', name: 'Mega', emoji: '🌈', size: 512, tool: 'bucket', blurb: 'Giant picture with extra shades' },
 ];

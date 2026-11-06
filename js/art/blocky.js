@@ -6,7 +6,8 @@ import { r, pix } from './shapes.js';
 const D = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 };
 const bg = r(1, 0, 0, 100, 100);
 
-export default [
+// flat: pixel art gets no shadows or highlights on the Mega level.
+const pictures = [
   {
     id: 'robot',
     name: 'Beep-Boop Robot',
@@ -176,3 +177,5 @@ export default [
     ],
   },
 ];
+
+export default pictures.map((p) => ({ ...p, flat: true }));

@@ -282,7 +282,7 @@ function queueSave() {
 function flushSave() {
   clearTimeout(saveTimer);
   if (!current) return;
-  store.saveProgress(current.animal.id, current.level.id, current.grid.hash, board.order);
+  store.saveProgress(current.animal.id, current.level.id, current.grid.hash, board.order, board.cells.length);
 }
 
 // ---------- level locks ----------
@@ -368,7 +368,8 @@ function showWin(firstTime, prize = false) {
   if (up) $('#levelUpBtn').textContent = `${up.emoji} Play on ${up.name} ›`;
   $('#nextBtn').classList.toggle('go', !up);
   const { animal, level } = current;
-  $('#winImg').src = board.snapshot(16).toDataURL();
+  $('#winImg').src = board.snapshot(Math.max(1, Math.round(256 / board.n))).toDataURL();
+  $('#winImg').style.imageRendering = board.n > 64 ? 'auto' : '';
   $('#winImg').alt = `Your finished ${animal.name}`;
   $('#winSay').textContent = animal.says;
   $('#winTitle').textContent = ['Hooray!', 'Amazing!', 'You did it!', 'Super star!'][Math.floor(Math.random() * 4)];
