@@ -396,6 +396,11 @@ export class Board {
     };
 
     cv.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Older iPad Safari ignores touch-action; stop it zooming or scrolling the page from the board.
+    const stop = (e) => { if (e.cancelable) e.preventDefault(); };
+    cv.addEventListener('touchstart', stop, { passive: false });
+    cv.addEventListener('touchmove', stop, { passive: false });
+    cv.addEventListener('gesturestart', stop);
 
     cv.addEventListener('pointerdown', (e) => {
       this.ev.onTouch?.();

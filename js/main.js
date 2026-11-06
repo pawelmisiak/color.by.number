@@ -163,8 +163,20 @@ function showHome() {
   renderHome();
 }
 
+// If the page itself got zoomed in (pinch on the home screen), snap it back
+// when a picture opens: briefly capping the viewport scale makes Safari reset it.
+function resetPageZoom() {
+  const vv = window.visualViewport;
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!vv || !meta || vv.scale <= 1.01) return;
+  const original = meta.content;
+  meta.content = original + ', maximum-scale=1';
+  setTimeout(() => { meta.content = original; }, 400);
+}
+
 function openGame(animal, level) {
   flushSave();
+  resetPageZoom();
   const grid = rasterize(animal, level.size);
   current = { animal, level, grid };
   home.hidden = true;
@@ -459,6 +471,21 @@ function ink(hex) {
   const l = 0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
   return l > 150 ? '#1f2a44' : '#ffffff';
 }
+
+// iPad Safari zooms the page on a quick double tap, and while coloring there is
+// no easy way to zoom back out. Swallow the second tap's default action and
+// press the button ourselves, so fast taps (like the secret code) still count.
+let lastTouchEnd = -1e9;
+document.addEventListener('touchend', (e) => {
+  const now = e.timeStamp;
+  const quick = now - lastTouchEnd < 350;
+  lastTouchEnd = now;
+  if (game.hidden || !quick || e.touches.length || e.changedTouches.length !== 1) return;
+  if (e.target.closest?.('#board')) return;
+  e.preventDefault();
+  const btn = e.target.closest?.('button');
+  if (btn && !btn.disabled) btn.click();
+}, { passive: false });
 
 window.addEventListener('hashchange', route);
 window.addEventListener('pagehide', flushSave);

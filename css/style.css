@@ -17,6 +17,8 @@
 }
 
 * { box-sizing: border-box; }
+/* No double-tap-to-zoom anywhere (it gets stuck on iPad while coloring); pinch zoom still works. */
+*, *::before, *::after { touch-action: manipulation; }
 html, body { margin: 0; height: 100%; }
 body {
   background: var(--bg);
