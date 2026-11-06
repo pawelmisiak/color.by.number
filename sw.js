@@ -1,5 +1,5 @@
 // Offline support: keeps a copy of the game so it still opens without internet.
-const CACHE = 'critters-v4';
+const CACHE = 'critters-v5';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/art.js', 'js/art/shapes.js', 'js/art/animals.js', 'js/art/sea.js', 'js/art/dinos.js', 'js/art/food.js', 'js/art/vehicles.js', 'js/art/monsters.js', 'js/art/blocky.js', 'js/raster.js', 'js/board.js', 'js/store.js', 'js/sound.js', 'js/confetti.js',

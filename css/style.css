@@ -231,14 +231,21 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 
 /* ---------- game ---------- */
 
+/* The toolbar gets its own column (its own row on phones), so it never covers the picture. */
 .game {
   position: fixed;
   inset: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "bar bar" "stage tools" "palette palette";
   height: 100dvh;
   background: var(--bg);
 }
+.game > .bar { grid-area: bar; }
+.game > .stage { grid-area: stage; }
+.game > .tools { grid-area: tools; }
+.game > .palette { grid-area: palette; }
 .bar {
   display: flex;
   align-items: center;
@@ -267,17 +274,15 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 .g-progress i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--sun), var(--accent)); border-radius: 999px; transition: width 0.3s; }
 .g-progress span { position: relative; display: block; text-align: center; font-weight: 600; font-size: 15px; line-height: 26px; }
 
-.stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.stage { position: relative; min-height: 0; min-width: 0; overflow: hidden; }
 #board { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; cursor: crosshair; }
 #board[data-tool="bucket"] { cursor: cell; }
 #board[data-tool="hand"] { cursor: grab; }
 #board[data-tool="hand"]:active { cursor: grabbing; }
 
 .tools {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  align-self: center;
+  margin: 0 10px 0 4px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -476,9 +481,14 @@ button:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
   .g-title { font-size: 18px; }
   .g-title #gName { display: none; }
   .bar { gap: 8px; }
+  .game {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "bar" "stage" "tools" "palette";
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+  }
   .tools {
-    position: static;
-    transform: none;
+    align-self: stretch;
+    margin: 0;
     flex-direction: row;
     justify-content: center;
     gap: 2px;
